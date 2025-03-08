@@ -148,6 +148,7 @@ class _RecipeListState extends State<RecipeList> {
       return Container();
     }
     return Flexible(child: ListView.builder(
+      itemCount: 1,
       itemBuilder: (context, index) {
         return Center(
           child: _buildRecipeCard(context, _currentRecipes1!.hits, 0),

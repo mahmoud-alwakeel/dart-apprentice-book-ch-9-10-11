@@ -29,11 +29,11 @@ Map<String, dynamic> _$APIReccipeQueryToJson(APIReccipeQuery instance) =>
     };
 
 APIHits _$APIHitsFromJson(Map<String, dynamic> json) => APIHits(
-      reccipe: APIReccipe.fromJson(json['reccipe'] as Map<String, dynamic>),
+      reccipe: APIReccipe.fromJson(json['recipe'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$APIHitsToJson(APIHits instance) => <String, dynamic>{
-      'reccipe': instance.reccipe,
+      'recipe': instance.reccipe,
     };
 
 APIReccipe _$APIReccipeFromJson(Map<String, dynamic> json) => APIReccipe(
