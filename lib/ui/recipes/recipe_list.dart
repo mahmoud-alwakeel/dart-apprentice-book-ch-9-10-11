@@ -2,12 +2,18 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
 import 'package:recipes/network/recipe_model.dart';
 
 import '../recipe_card.dart';
 import 'recipe_details.dart';
 // TODO: Add imports
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../widgets/custom_dropdown.dart';
+
 
 class RecipeList extends StatefulWidget {
   const RecipeList({Key? key}) : super(key: key);
@@ -17,7 +23,7 @@ class RecipeList extends StatefulWidget {
 }
 
 class _RecipeListState extends State<RecipeList> {
-  // TODO: Add key
+  static const String prefSearchKey = 'previousSearches';
   late TextEditingController searchTextController;
   final ScrollController _scrollController = ScrollController();
   List currentSearchList = [];
@@ -28,15 +34,20 @@ class _RecipeListState extends State<RecipeList> {
   bool hasMore = false;
   bool loading = false;
   bool inErrorState = false;
+
   // TODO: Add searches array
   APIReccipeQuery? _currentRecipes1;
+
+  List<String> previousSearches = [];
+  // TODO: Add _currentRecipes1
+
 
   @override
   void initState() {
     super.initState();
     loadRecipes();
 
-    // TODO: Call getPreviousSearches
+    getPreviousSearches();
     searchTextController = TextEditingController(text: '');
     _scrollController.addListener(() {
       final triggerFetchMoreSize =
@@ -71,9 +82,22 @@ class _RecipeListState extends State<RecipeList> {
     super.dispose();
   }
 
-  // TODO: Add savePreviousSearches
+  void savePreviousSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setStringList(prefSearchKey, previousSearches);
+  }
 
-  // TODO: Add getPreviousSearches
+  void getPreviousSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey(prefSearchKey)) {
+      final searches = prefs.getStringList(prefSearchKey);
+      if (searches != null) {
+        previousSearches = searches;
+      } else {
+        previousSearches = [];
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,8 +124,16 @@ class _RecipeListState extends State<RecipeList> {
         padding: const EdgeInsets.all(4.0),
         child: Row(
           children: [
-            // Replace
-            const Icon(Icons.search),
+            IconButton(
+              onPressed: () {
+                startSearch(searchTextController.text);
+                final currentFocus = FocusScope.of(context);
+                if (!currentFocus.hasPrimaryFocus) {
+                  currentFocus.unfocus();
+                }
+              },
+              icon: Icon(Icons.search),
+            ),
             const SizedBox(
               width: 6.0,
             ),
@@ -128,9 +160,36 @@ class _RecipeListState extends State<RecipeList> {
                               },
                             )
                           }
+
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (value) {
+                        startSearch(searchTextController.text);
+
                       },
+                      controller: searchTextController,
                     ),
                   ),
+                  PopupMenuButton(
+                    icon: Icon(Icons.arrow_drop_down),
+                    onSelected: (String value) {
+                      searchTextController.text = value;
+                      startSearch(searchTextController.text);
+                    },
+                    itemBuilder: (BuildContext context) {
+                      // ignore: lines_longer_than_80_chars
+                      return previousSearches.map<CustomDropdownMenuItem<String>>((String value) {
+                        // ignore: lines_longer_than_80_chars
+                        return CustomDropdownMenuItem(value: value, text: value, 
+                        callback: () {
+                          setState(() {
+                            previousSearches.remove(value);
+                            savePreviousSearches();
+                            Navigator.pop(context);
+                          });
+                        },
+                        );
+                      }).toList();
+                    })
                 ],
               ),
             ),
@@ -141,7 +200,21 @@ class _RecipeListState extends State<RecipeList> {
     );
   }
 
-  // TODO: Add startSearch
+  void startSearch(String value) {
+    setState(() {
+      currentSearchList.clear();
+      currentCount = 0;
+      currentEndPosition = pageCount;
+      currentStartPosition = 0;
+      hasMore = true;
+      value = value.trim();
+
+      if (!previousSearches.contains(value)) {
+        previousSearches.add(value);
+        savePreviousSearches();
+      }
+    });
+  }
 
   Widget _buildRecipeLoader(BuildContext context) {
     if (_currentRecipes1 == null || _currentRecipes1?.hits == null) {
