@@ -13,17 +13,21 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.5
+  json_annotation: ^4.9.0
   platform: ^3.1.6
   flutter_svg: ^2.0.17
   cached_network_image: ^3.2.2
   flutter_slidable: ^3.0.2
   shared_preferences: ^2.0.15
+
   
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.1
+  json_serializable: ^6.9.0
+  build_runner: ^2.4.13
 
 flutter:
   uses-material-design: true
